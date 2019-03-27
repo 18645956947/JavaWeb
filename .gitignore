@@ -1,8 +1,7 @@
 *.class
 
 #package file
-git
-*.war
+gitsxx
 *.ear
 
 #kdiff3 ignore
