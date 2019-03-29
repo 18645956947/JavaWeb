@@ -2,6 +2,7 @@ package com.mmall.service.impl;
 
 import com.mmall.common.Const;
 import com.mmall.common.ServerResponse;
+import com.mmall.common.TokenCache;
 import com.mmall.dao.UserMapper;
 import com.mmall.pojo.User;
 import com.mmall.service.IUserService;
@@ -12,6 +13,7 @@ import org.springframework.stereotype.Service;
 import sun.nio.cs.US_ASCII;
 
 import java.nio.channels.SeekableByteChannel;
+import java.util.UUID;
 
 @Service("iUserService")
 public class IUserServiceImpl implements IUserService {
@@ -76,4 +78,39 @@ public class IUserServiceImpl implements IUserService {
         }
         return ServerResponse.createBySuccessMessage("校验成功");
     }
+
+    public ServerResponse selectQuestion(String username){
+        ServerResponse validResponse = this.checkValid(username, Const.USERNAME);
+        if(validResponse.isSuccess()){
+            //用户不存在
+            return ServerResponse.createByErrorMessage("用户不存在");
+        }
+        String question = userMapper.selectQuestionByUsername(username);
+        if(StringUtils.isNoneBlank(question)){
+            return ServerResponse.createBySuccessMessage(question);
+        }
+        return ServerResponse.createByErrorMessage("找回密码的问题是错误的");
+    }
+
+
+
+    public ServerResponse<String> checkAnswer(String username, String question,String answer){
+        int  resultCount = userMapper.checkAnswer(username, question, answer);
+        if (resultCount > 0) {
+            //说明是正确的
+            String forgetToken = UUID.randomUUID().toString();
+            TokenCache.setKey("token_"+username, forgetToken);
+            return ServerResponse.createBySuccess(forgetToken);
+        }
+        return ServerResponse.createByErrorMessage("问题的答案错误");
+    }
+
+    public ServerResponse<String> forgetResetPassword(String username, String passwordNew, String forgetToken){
+        if(StringUtils.isNoneBlank(forgetToken)){
+            return ServerResponse.createByErrorMessage("参数错误， token需要传递");
+
+        }
+        return null;
+    }
+
 }
